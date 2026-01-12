@@ -16,11 +16,9 @@ class MetricsRecorder(Protocol):
 
     def init_metrics(self, version: str) -> None:
         """Initialize package metrics."""
-        ...
 
     def record_optimization_start(self, prompt_name: str) -> None:
         """Record the start of an optimization run."""
-        ...
 
     def record_optimization_complete(
         self,
@@ -29,7 +27,6 @@ class MetricsRecorder(Protocol):
         success: bool = True,
     ) -> None:
         """Record the completion of an optimization run."""
-        ...
 
     def record_variant_evaluation(
         self,
@@ -38,7 +35,6 @@ class MetricsRecorder(Protocol):
         scores: dict[str, float],
     ) -> None:
         """Record a variant evaluation."""
-        ...
 
     def record_test_case_result(
         self,
@@ -46,7 +42,6 @@ class MetricsRecorder(Protocol):
         passed: bool,
     ) -> None:
         """Record a test case result."""
-        ...
 
     def record_llm_request(
         self,
@@ -58,7 +53,6 @@ class MetricsRecorder(Protocol):
         cost_usd: float,
     ) -> None:
         """Record an LLM API request."""
-        ...
 
     def record_judge_evaluation(
         self,
@@ -67,7 +61,6 @@ class MetricsRecorder(Protocol):
         scores: dict[str, float],
     ) -> None:
         """Record an LLM judge evaluation."""
-        ...
 
     def record_best_variant(
         self,
@@ -76,7 +69,6 @@ class MetricsRecorder(Protocol):
         score: float,
     ) -> None:
         """Record the best performing variant."""
-        ...
 
 
 class PrometheusMetricsRecorder:

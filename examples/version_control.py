@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Example of prompt version control."""
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from prompt_optimizer import Prompt
 from prompt_optimizer.storage import PromptStorage

@@ -54,7 +54,7 @@ def main() -> None:
     )
 
     # Display results
-    print(f"\nOptimization complete!")
+    print("\nOptimization complete!")
     print(f"Variants tested: {results.variants_tested}")
     print(f"Test cases run: {results.test_cases_run}")
     print(f"Total cost: ${results.total_cost:.4f}")

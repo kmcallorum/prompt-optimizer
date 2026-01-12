@@ -2,8 +2,13 @@
 
 from typing import Any
 
-from jinja2 import Template
+from jinja2 import Environment
 from pydantic import BaseModel, Field
+
+# Jinja2 environment for LLM prompt templates.
+# autoescape is disabled because we're generating prompts for LLMs, not HTML.
+# LLM prompts should preserve special characters like <, >, & without escaping.
+_jinja_env = Environment(autoescape=False)  # noqa: S701
 
 
 class Prompt(BaseModel):
@@ -18,7 +23,7 @@ class Prompt(BaseModel):
     def render(self, **kwargs: str) -> str:
         """Render template with variables."""
         merged_vars = {**self.variables, **kwargs}
-        jinja_template = Template(self.template)
+        jinja_template = _jinja_env.from_string(self.template)
         return jinja_template.render(**merged_vars)
 
 
@@ -33,7 +38,7 @@ class PromptVariant(BaseModel):
     def render(self, **kwargs: str) -> str:
         """Render the variant template with variables."""
         merged_vars = {**self.base_prompt.variables, **kwargs}
-        jinja_template = Template(self.template)
+        jinja_template = _jinja_env.from_string(self.template)
         return jinja_template.render(**merged_vars)
 
 

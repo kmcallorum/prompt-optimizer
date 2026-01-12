@@ -23,7 +23,6 @@ class ClientFactory(Protocol):
         Returns:
             Configured LLM client
         """
-        ...
 
 
 # Type alias for client creator functions

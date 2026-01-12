@@ -14,17 +14,13 @@ class LLMClient(Protocol):
         temperature: float = 0.7,
     ) -> str:
         """Generate text from prompt."""
-        ...
 
     def count_tokens(self, text: str) -> int:
         """Count tokens in text."""
-        ...
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Calculate API cost."""
-        ...
 
     @property
     def model_name(self) -> str:
         """Get the model name."""
-        ...

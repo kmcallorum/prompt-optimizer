@@ -4,7 +4,11 @@
 import asyncio
 
 from prompt_optimizer import Prompt, TestCase
-from prompt_optimizer.core import evaluate_all_variants, generate_variants, get_llm_client
+from prompt_optimizer.core import (
+    evaluate_all_variants,
+    generate_variants,
+    get_llm_client,
+)
 from prompt_optimizer.evaluator import EVALUATORS, select_best_variant
 
 
@@ -126,15 +130,11 @@ Requirements:
     # Show individual scores
     print("\nDetailed scores by variant:")
     for variant_name in ["concise", "detailed", "structured"]:
-        variant_results = [r for r in results if r.variant.strategy == variant_name]
-        if variant_results:
-            avg_formal = sum(r.scores.get("formal_tone", 0) for r in variant_results) / len(
-                variant_results
-            )
-            avg_accuracy = sum(r.scores.get("accuracy", 0) for r in variant_results) / len(
-                variant_results
-            )
-            print(f"  {variant_name}: accuracy={avg_accuracy:.2%}, formal_tone={avg_formal:.2%}")
+        vr = [r for r in results if r.variant.strategy == variant_name]
+        if vr:
+            avg_formal = sum(r.scores.get("formal_tone", 0) for r in vr) / len(vr)
+            avg_accuracy = sum(r.scores.get("accuracy", 0) for r in vr) / len(vr)
+            print(f"  {variant_name}: acc={avg_accuracy:.2%}, formal={avg_formal:.2%}")
 
 
 if __name__ == "__main__":

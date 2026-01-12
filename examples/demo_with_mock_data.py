@@ -40,17 +40,25 @@ class DemoMockLLMClient:
             "Machine learning enables computers to learn from data automatically.",
             "Python is a readable, high-level programming language.",
             # Detailed strategy responses
-            "Machine learning is an AI subset where systems improve "
-            "through experience, accessing and learning from data.",
-            "Python is a versatile, high-level language with clear syntax, supporting "
-            "multiple paradigms and featuring an extensive standard library.",
+            (
+                "Machine learning is an AI subset where systems improve "
+                "through experience, accessing and learning from data."
+            ),
+            (
+                "Python is a versatile, high-level language with clear syntax, "
+                "supporting multiple paradigms and featuring an extensive library."
+            ),
             # Chain-of-thought responses
-            "Let me analyze this: The text discusses ML fundamentals. Key points: "
-            "1) subset of AI, 2) learns from experience, 3) no explicit programming. "
-            "Summary: ML allows systems to automatically learn from data.",
-            "Breaking down: 1) Python is high-level and interpreted, 2) known for "
-            "readability, 3) supports multiple paradigms. Summary: Python is a clear, "
-            "versatile programming language with extensive libraries.",
+            (
+                "Let me analyze this: The text discusses ML fundamentals. Key points: "
+                "1) subset of AI, 2) learns from experience, 3) self-improving. "
+                "Summary: ML allows systems to automatically learn from data."
+            ),
+            (
+                "Breaking down: 1) Python is high-level and interpreted, 2) known for "
+                "readability, 3) multi-paradigm. "
+                "Summary: Python is a clear, versatile language with many libraries."
+            ),
         ]
 
     async def generate(
