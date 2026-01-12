@@ -31,7 +31,6 @@ from prompt_optimizer.reporters import (
 )
 from prompt_optimizer.storage import PromptStorage
 
-
 console = Console()
 
 
