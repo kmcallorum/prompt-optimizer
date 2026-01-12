@@ -88,10 +88,15 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.coverage.run]
 source = ["src/prompt_optimizer"]
 branch = true
+omit = [
+    "src/prompt_optimizer/llm_clients/base.py",
+]
 
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
+    "\\.\\.\\.",
+    "pass",
 ]

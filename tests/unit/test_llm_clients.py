@@ -1,6 +1,5 @@
 """Unit tests for LLM clients."""
 
-import pytest
 
 from prompt_optimizer.llm_clients.anthropic import AnthropicClient
 from prompt_optimizer.llm_clients.ollama import OllamaClient

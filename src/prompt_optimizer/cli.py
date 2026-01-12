@@ -339,5 +339,5 @@ def show(prompt_file: str) -> None:
     console.print(syntax)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     cli()

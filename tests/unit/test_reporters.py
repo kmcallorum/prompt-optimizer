@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from rich.console import Console
+
 from prompt_optimizer.evaluator import EvaluationResult, OptimizationResults
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase
 from prompt_optimizer.reporters import (
@@ -12,7 +14,6 @@ from prompt_optimizer.reporters import (
     save_html_report,
     save_json_report,
 )
-from rich.console import Console
 
 
 def create_sample_results() -> OptimizationResults:

@@ -163,7 +163,11 @@ class TestCliCommands:
         output_file = tmp_path / "output.json"
         result = runner.invoke(
             cli,
-            ["report", str(results_file), "--format", "json", "--output", str(output_file)],
+            [
+                "report", str(results_file),
+                "--format", "json",
+                "--output", str(output_file),
+            ],
         )
         assert result.exit_code == 0
         assert output_file.exists()
@@ -176,7 +180,11 @@ class TestCliCommands:
         output_file = tmp_path / "output.html"
         result = runner.invoke(
             cli,
-            ["report", str(results_file), "--format", "html", "--output", str(output_file)],
+            [
+                "report", str(results_file),
+                "--format", "html",
+                "--output", str(output_file),
+            ],
         )
         assert result.exit_code == 0
         assert output_file.exists()
