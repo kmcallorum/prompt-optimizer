@@ -60,11 +60,15 @@ class TestPromptStorage:
 
     def test_load_latest(self, tmp_path: Path) -> None:
         """Test loading latest version."""
+        import time
+
         storage = PromptStorage(tmp_path / ".prompt-optimizer")
 
-        # Save two versions
+        # Save two versions with delay to ensure different timestamps
         prompt1 = Prompt(template="Version 1", name="latest-test")
         storage.save_prompt(prompt1)
+
+        time.sleep(0.1)  # Ensure different mtime
 
         prompt2 = Prompt(template="Version 2", name="latest-test")
         storage.save_prompt(prompt2)
