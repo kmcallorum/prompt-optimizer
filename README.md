@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/kmcallorum/prompt-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/kmcallorum/prompt-optimizer/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/kmcallorum/prompt-optimizer/graph/badge.svg)](https://codecov.io/gh/kmcallorum/prompt-optimizer)
+[![Snyk Security](https://snyk.io/test/github/kmcallorum/prompt-optimizer/badge.svg)](https://snyk.io/test/github/kmcallorum/prompt-optimizer)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
