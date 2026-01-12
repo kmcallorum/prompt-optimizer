@@ -6,6 +6,7 @@ from pathlib import Path
 
 import click
 import yaml
+from prometheus_client import start_http_server
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -18,6 +19,7 @@ from prompt_optimizer.core import (
     optimize_prompt_async,
 )
 from prompt_optimizer.llm_judge import LLMJudge
+from prompt_optimizer.metrics import init_metrics
 from prompt_optimizer.prompt import Prompt, TestCase
 from prompt_optimizer.reporters import (
     display_comparison,
@@ -55,7 +57,7 @@ def load_test_cases_from_yaml(path: Path) -> list[TestCase]:
 
 
 @click.group()
-@click.version_option(version="0.2.0")
+@click.version_option(version="0.3.0")
 def cli() -> None:
     """Prompt Optimizer - Test and optimize your LLM prompts."""
     pass
@@ -358,6 +360,26 @@ def show(prompt_file: str) -> None:
     content = Path(prompt_file).read_text()
     syntax = Syntax(content, "yaml", theme="monokai", line_numbers=True)
     console.print(syntax)
+
+
+@cli.command()
+@click.option("--port", default=8000, help="Port for metrics server")
+def metrics(port: int) -> None:
+    """Start Prometheus metrics server."""
+    init_metrics()
+    console.print(f"Starting Prometheus metrics server on port [cyan]{port}[/cyan]")
+    console.print(f"Metrics available at: [cyan]http://localhost:{port}/metrics[/cyan]")
+    console.print("Press Ctrl+C to stop")
+
+    start_http_server(port)
+
+    # Keep the server running
+    try:
+        import time
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        console.print("\nMetrics server stopped")
 
 
 if __name__ == "__main__":  # pragma: no cover

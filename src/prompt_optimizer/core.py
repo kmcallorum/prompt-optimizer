@@ -14,6 +14,14 @@ from prompt_optimizer.llm_clients.base import LLMClient
 from prompt_optimizer.llm_clients.ollama import OllamaClient
 from prompt_optimizer.llm_clients.openai import OpenAIClient
 from prompt_optimizer.llm_judge import LLMJudge
+from prompt_optimizer.metrics import (
+    record_best_variant,
+    record_llm_request,
+    record_optimization_complete,
+    record_optimization_start,
+    record_test_case_result,
+    record_variant_evaluation,
+)
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase
 
 STRATEGY_TRANSFORMS: dict[str, dict[str, str]] = {
@@ -108,6 +116,22 @@ async def evaluate_variant(
     input_tokens = llm_client.count_tokens(rendered)
     output_tokens = llm_client.count_tokens(response)
     cost = llm_client.calculate_cost(input_tokens, output_tokens)
+
+    # Record metrics
+    prompt_name = variant.base_prompt.name
+    record_llm_request(
+        llm=llm_client.model_name,
+        operation="generate",
+        duration_seconds=latency,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cost_usd=cost,
+    )
+    record_variant_evaluation(prompt_name, variant.strategy, scores)
+
+    # Record test case result (pass if accuracy > 0.7)
+    accuracy = scores.get("accuracy", 0.0)
+    record_test_case_result(prompt_name, passed=accuracy > 0.7)
 
     return EvaluationResult(
         variant=variant,
@@ -221,6 +245,9 @@ async def optimize_prompt_async(
     if strategies is None:
         strategies = ["concise", "detailed"]
 
+    # Record optimization start
+    record_optimization_start(prompt.name)
+
     start_time = time.time()
     llm_client = get_llm_client(llm, api_key)
 
@@ -230,24 +257,34 @@ async def optimize_prompt_async(
         judge_client = get_llm_client(judge_llm, judge_api_key)
         judge = LLMJudge(judge_client, criteria)
 
-    variants = generate_variants(prompt, strategies)
-    results = await evaluate_all_variants(
-        variants, test_cases, llm_client, criteria, judge=judge
-    )
-    best_variant, best_score = select_best_variant(results, weights)
-    total_time = time.time() - start_time
-    total_cost = sum(r.cost_usd for r in results)
+    try:
+        variants = generate_variants(prompt, strategies)
+        results = await evaluate_all_variants(
+            variants, test_cases, llm_client, criteria, judge=judge
+        )
+        best_variant, best_score = select_best_variant(results, weights)
+        total_time = time.time() - start_time
+        total_cost = sum(r.cost_usd for r in results)
 
-    return OptimizationResults(
-        base_prompt_name=prompt.name,
-        variants_tested=len(variants),
-        test_cases_run=len(test_cases),
-        best_variant=best_variant,
-        best_weighted_score=best_score,
-        all_results=results,
-        total_cost=total_cost,
-        total_time_seconds=total_time,
-    )
+        # Record successful optimization
+        record_optimization_complete(prompt.name, total_time, success=True)
+        record_best_variant(prompt.name, best_variant.strategy, best_score)
+
+        return OptimizationResults(
+            base_prompt_name=prompt.name,
+            variants_tested=len(variants),
+            test_cases_run=len(test_cases),
+            best_variant=best_variant,
+            best_weighted_score=best_score,
+            all_results=results,
+            total_cost=total_cost,
+            total_time_seconds=total_time,
+        )
+    except Exception:
+        # Record failed optimization
+        total_time = time.time() - start_time
+        record_optimization_complete(prompt.name, total_time, success=False)
+        raise
 
 
 def optimize_prompt(

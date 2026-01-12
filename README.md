@@ -15,6 +15,7 @@ A CLI tool and Python library for optimizing LLM prompts through systematic test
 - **Prompt Testing**: Run multiple prompt variations against test cases
 - **Quality Metrics**: Score outputs on accuracy, conciseness, tone, and cost
 - **LLM-as-Judge**: AI-powered evaluation using any LLM as a judge
+- **Prometheus Metrics**: Built-in observability with Prometheus metrics
 - **Version Control**: Track prompt evolution with history and diffs
 - **Auto-Selection**: Identify and select the best-performing prompt variant
 - **CLI & Library**: Use as a command-line tool or Python import
@@ -252,6 +253,38 @@ The LLM judge evaluates responses on:
 - **coherence** - How well-structured and logical the response is
 - **completeness** - Whether all aspects of the prompt are addressed
 - **conciseness** - Whether the response is appropriately brief
+
+## Prometheus Metrics
+
+Built-in observability for production deployments:
+
+```bash
+# Start metrics server
+prompt-optimizer metrics --port 8000
+
+# Metrics available at http://localhost:8000/metrics
+```
+
+```python
+from prompt_optimizer import init_metrics, start_http_server
+
+# Initialize and start metrics server
+init_metrics()
+start_http_server(8000)
+
+# Run optimizations - metrics are automatically recorded
+results = optimize_prompt(...)
+```
+
+Available metrics:
+- `prompt_optimizer_optimizations_total` - Total optimization runs
+- `prompt_optimizer_optimization_duration_seconds` - Optimization duration
+- `prompt_optimizer_variants_evaluated_total` - Variants evaluated
+- `prompt_optimizer_test_cases_run_total` - Test cases run
+- `prompt_optimizer_llm_requests_total` - LLM API requests
+- `prompt_optimizer_llm_tokens_total` - Tokens used (input/output)
+- `prompt_optimizer_llm_cost_usd_total` - Total cost in USD
+- `prompt_optimizer_best_variant_score` - Best variant score
 
 ## Configuration
 
