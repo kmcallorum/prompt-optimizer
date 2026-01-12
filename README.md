@@ -1,0 +1,259 @@
+# prompt-optimizer
+
+A CLI tool and Python library for optimizing LLM prompts through systematic testing, version control, and performance metrics. Think "pytest for prompts" - test multiple prompt variations, measure quality, and automatically select the best performer.
+
+## Features
+
+- **Prompt Testing**: Run multiple prompt variations against test cases
+- **Quality Metrics**: Score outputs on accuracy, conciseness, tone, and cost
+- **Version Control**: Track prompt evolution with history and diffs
+- **Auto-Selection**: Identify and select the best-performing prompt variant
+- **CLI & Library**: Use as a command-line tool or Python import
+- **Multi-LLM Support**: Works with Anthropic Claude, OpenAI GPT, and local Ollama models
+
+## Quick Start
+
+```bash
+# Install
+pip install -e .
+
+# Initialize a project
+prompt-optimizer init
+
+# Optimize a prompt
+prompt-optimizer optimize prompts/example.yaml \
+    --test-cases tests/example_tests.yaml \
+    --strategies concise,detailed \
+    --llm claude-sonnet-4 \
+    --output results.json
+```
+
+## Installation
+
+### From Source
+
+```bash
+git clone https://github.com/yourusername/prompt-optimizer.git
+cd prompt-optimizer
+pip install -e .
+```
+
+### With Development Dependencies
+
+```bash
+pip install -e ".[dev]"
+```
+
+### Using Docker
+
+```bash
+docker-compose build
+docker-compose run prompt-optimizer --help
+```
+
+## Usage
+
+### CLI Commands
+
+```bash
+# Initialize new project with example files
+prompt-optimizer init
+
+# Test a prompt against test cases
+prompt-optimizer test prompt.yaml --test-cases tests.yaml --llm claude-sonnet-4
+
+# Optimize with multiple strategies
+prompt-optimizer optimize prompt.yaml \
+    --strategies concise,detailed,cot \
+    --test-cases tests.yaml \
+    --llm claude-sonnet-4 \
+    --output results.json
+
+# Compare two prompts
+prompt-optimizer compare prompt1.yaml prompt2.yaml --test-cases tests.yaml
+
+# View prompt history
+prompt-optimizer history my-prompt
+
+# Generate report from results
+prompt-optimizer report results.json --format html --output report.html
+
+# Display a prompt file
+prompt-optimizer show prompt.yaml
+```
+
+### Python Library
+
+```python
+from prompt_optimizer import Prompt, TestCase, optimize_prompt
+
+# Define a prompt
+prompt = Prompt(
+    template="Summarize this text in {{ length }}: {{ text }}",
+    variables={"length": "one sentence", "text": ""},
+    system_message="You are a helpful summarization assistant.",
+    name="summarizer",
+)
+
+# Define test cases
+test_cases = [
+    TestCase(
+        input_variables={
+            "text": "Long article text here...",
+            "length": "one sentence"
+        },
+        expected_properties={"length": "<30 words"}
+    )
+]
+
+# Run optimization
+results = optimize_prompt(
+    prompt,
+    test_cases,
+    strategies=["concise", "detailed"],
+    llm="claude-sonnet-4"
+)
+
+print(f"Best variant: {results.best_variant.strategy}")
+print(f"Score: {results.best_weighted_score:.2%}")
+```
+
+## File Formats
+
+### Prompt File (YAML)
+
+```yaml
+template: |
+  Answer the following question: {{ question }}
+
+  Requirements:
+  - Be concise
+  - Be accurate
+
+system_message: "You are a helpful AI assistant."
+
+variables:
+  question: ""
+
+metadata:
+  author: "developer"
+  version: "1.0"
+  tags: ["qa", "concise"]
+```
+
+### Test Cases (YAML)
+
+```yaml
+name: "QA Test Suite"
+
+test_cases:
+  - input_variables:
+      question: "What is the capital of France?"
+    expected_output: "Paris"
+    expected_properties:
+      tone: "neutral"
+      length: "<20 words"
+
+  - input_variables:
+      question: "Explain quantum computing"
+    expected_properties:
+      length: "50-150 words"
+      includes: ["qubits", "superposition"]
+```
+
+## Supported LLMs
+
+| Provider | Models | Environment Variable |
+|----------|--------|---------------------|
+| Anthropic | claude-sonnet-4, claude-opus-4 | `ANTHROPIC_API_KEY` |
+| OpenAI | gpt-4o, gpt-4-turbo, gpt-3.5-turbo | `OPENAI_API_KEY` |
+| Ollama | llama3, mistral, etc. | N/A (local) |
+
+Specify the LLM with the `--llm` flag:
+
+```bash
+prompt-optimizer optimize prompt.yaml --llm claude-sonnet-4
+prompt-optimizer optimize prompt.yaml --llm gpt-4o
+prompt-optimizer optimize prompt.yaml --llm ollama:llama3
+```
+
+## Optimization Strategies
+
+| Strategy | Description |
+|----------|-------------|
+| `concise` | Makes responses shorter and more direct |
+| `detailed` | Adds context and thorough explanations |
+| `cot` | Adds chain-of-thought reasoning |
+| `structured` | Formats output with sections and bullet points |
+| `few_shot` | Adds example-based prompting |
+
+## Evaluation Criteria
+
+Built-in scoring functions:
+
+- **accuracy**: Compares output to expected result using sequence matching
+- **conciseness**: Scores based on word count and length constraints
+- **includes**: Checks for required keywords in response
+
+Custom evaluators can be added:
+
+```python
+from prompt_optimizer.evaluator import EVALUATORS
+
+def custom_scorer(response: str, test_case: TestCase) -> float:
+    # Your scoring logic
+    return 0.8
+
+EVALUATORS["custom"] = custom_scorer
+```
+
+## Configuration
+
+Environment variables:
+
+```bash
+export ANTHROPIC_API_KEY=your-api-key
+export OPENAI_API_KEY=your-api-key
+```
+
+## Development
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=src/prompt_optimizer --cov-report=html
+
+# Lint
+ruff check src tests
+
+# Type check
+mypy src
+```
+
+## Project Structure
+
+```
+prompt-optimizer/
+├── src/prompt_optimizer/
+│   ├── __init__.py
+│   ├── cli.py              # Click-based CLI
+│   ├── core.py             # Core optimization logic
+│   ├── prompt.py           # Prompt models
+│   ├── evaluator.py        # Scoring functions
+│   ├── storage.py          # Version control
+│   ├── reporters.py        # Result reporting
+│   └── llm_clients/        # LLM integrations
+├── tests/
+├── examples/
+├── Dockerfile
+└── docker-compose.yml
+```
+
+## License
+
+MIT

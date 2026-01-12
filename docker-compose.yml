@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  prompt-optimizer:
+    build: .
+    volumes:
+      - ./prompts:/app/prompts
+      - ./results:/app/results
+      - ./.prompt-optimizer:/app/.prompt-optimizer
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    command: --help
+
+  # Example: Run optimization
+  optimize:
+    build: .
+    volumes:
+      - ./prompts:/app/prompts
+      - ./results:/app/results
+      - ./.prompt-optimizer:/app/.prompt-optimizer
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    command: optimize /app/prompts/example.yaml --test-cases /app/prompts/tests.yaml --output /app/results/output.json
+    profiles:
+      - optimize
+
+  # Example: Compare prompts
+  compare:
+    build: .
+    volumes:
+      - ./prompts:/app/prompts
+      - ./results:/app/results
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    command: compare /app/prompts/prompt1.yaml /app/prompts/prompt2.yaml --test-cases /app/prompts/tests.yaml
+    profiles:
+      - compare
+
+  # Development with Ollama for local testing
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles:
+      - local
+
+volumes:
+  ollama_data:
