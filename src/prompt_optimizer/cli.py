@@ -17,6 +17,7 @@ from prompt_optimizer.core import (
     get_llm_client,
     optimize_prompt_async,
 )
+from prompt_optimizer.llm_judge import LLMJudge
 from prompt_optimizer.prompt import Prompt, TestCase
 from prompt_optimizer.reporters import (
     display_comparison,
@@ -54,7 +55,7 @@ def load_test_cases_from_yaml(path: Path) -> list[TestCase]:
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.2.0")
 def cli() -> None:
     """Prompt Optimizer - Test and optimize your LLM prompts."""
     pass
@@ -133,8 +134,9 @@ test_cases:
 @cli.command()
 @click.argument("prompt_file", type=click.Path(exists=True))
 @click.option("--test-cases", required=True, type=click.Path(exists=True))
-@click.option("--llm", default="claude-sonnet-4", help="LLM to use")
-def test(prompt_file: str, test_cases: str, llm: str) -> None:
+@click.option("--llm", default="claude-sonnet-4", help="LLM to use for generation")
+@click.option("--judge", default=None, help="LLM judge for AI-based evaluation")
+def test(prompt_file: str, test_cases: str, llm: str, judge: str | None) -> None:
     """Test a single prompt against test cases."""
     prompt = load_prompt_from_yaml(Path(prompt_file))
     cases = load_test_cases_from_yaml(Path(test_cases))
@@ -142,6 +144,8 @@ def test(prompt_file: str, test_cases: str, llm: str) -> None:
     console.print(f"Testing prompt: [cyan]{prompt.name}[/cyan]")
     console.print(f"Test cases: [cyan]{len(cases)}[/cyan]")
     console.print(f"LLM: [cyan]{llm}[/cyan]")
+    if judge:
+        console.print(f"Judge: [cyan]{judge}[/cyan] (AI-based evaluation)")
 
     async def run_test() -> None:
         llm_client = get_llm_client(llm)
@@ -149,19 +153,31 @@ def test(prompt_file: str, test_cases: str, llm: str) -> None:
             generate_variants(prompt, ["concise"])[0]
         ]  # Just test the base prompt
 
+        # Create judge if specified
+        judge_obj: LLMJudge | None = None
+        if judge:
+            judge_client = get_llm_client(judge)
+            judge_obj = LLMJudge(judge_client)
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
             progress.add_task("Running tests...", total=None)
-            results = await evaluate_all_variants(variants, cases, llm_client)
+            results = await evaluate_all_variants(
+                variants, cases, llm_client, judge=judge_obj
+            )
 
         console.print()
         for i, result in enumerate(results, 1):
             acc = result.scores.get("accuracy", 0)
             status = "[green]PASS[/green]" if acc > 0.7 else "[red]FAIL[/red]"
             console.print(f"Test {i}: {status} (accuracy: {acc:.2%})")
+            if judge:
+                # Show all AI judge scores
+                pairs = [f"{k}: {v:.2f}" for k, v in result.scores.items()]
+                console.print(f"  Scores: {', '.join(pairs)}")
             console.print(f"  Output: {result.output[:100]}...")
 
     asyncio.run(run_test())
@@ -175,13 +191,15 @@ def test(prompt_file: str, test_cases: str, llm: str) -> None:
     default="concise,detailed",
     help="Comma-separated list of strategies",
 )
-@click.option("--llm", default="claude-sonnet-4", help="LLM to use")
+@click.option("--llm", default="claude-sonnet-4", help="LLM to use for generation")
+@click.option("--judge", default=None, help="LLM judge for AI-based evaluation")
 @click.option("--output", type=click.Path(), help="Output file for results (JSON)")
 def optimize(
     prompt_file: str,
     test_cases: str,
     strategies: str,
     llm: str,
+    judge: str | None,
     output: str | None,
 ) -> None:
     """Optimize a prompt with multiple strategies."""
@@ -193,6 +211,8 @@ def optimize(
     console.print(f"Strategies: [cyan]{', '.join(strategy_list)}[/cyan]")
     console.print(f"Test cases: [cyan]{len(cases)}[/cyan]")
     console.print(f"LLM: [cyan]{llm}[/cyan]")
+    if judge:
+        console.print(f"Judge: [cyan]{judge}[/cyan] (AI-based evaluation)")
 
     async def run_optimization() -> None:
         with Progress(
@@ -206,6 +226,7 @@ def optimize(
                 test_cases=cases,
                 strategies=strategy_list,
                 llm=llm,
+                judge_llm=judge,
             )
 
         display_results(console, results)

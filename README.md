@@ -14,6 +14,7 @@ A CLI tool and Python library for optimizing LLM prompts through systematic test
 
 - **Prompt Testing**: Run multiple prompt variations against test cases
 - **Quality Metrics**: Score outputs on accuracy, conciseness, tone, and cost
+- **LLM-as-Judge**: AI-powered evaluation using any LLM as a judge
 - **Version Control**: Track prompt evolution with history and diffs
 - **Auto-Selection**: Identify and select the best-performing prompt variant
 - **CLI & Library**: Use as a command-line tool or Python import
@@ -75,6 +76,13 @@ prompt-optimizer optimize prompt.yaml \
     --strategies concise,detailed,cot \
     --test-cases tests.yaml \
     --llm claude-sonnet-4 \
+    --output results.json
+
+# Use LLM-as-judge for AI-powered evaluation
+prompt-optimizer optimize prompt.yaml \
+    --test-cases tests.yaml \
+    --llm claude-sonnet-4 \
+    --judge gpt-4o \
     --output results.json
 
 # Compare two prompts
@@ -214,6 +222,36 @@ def custom_scorer(response: str, test_case: TestCase) -> float:
 
 EVALUATORS["custom"] = custom_scorer
 ```
+
+## LLM-as-Judge
+
+Use an LLM to evaluate response quality instead of rule-based scoring:
+
+```bash
+# Use GPT-4 as judge while testing with Claude
+prompt-optimizer optimize prompt.yaml \
+    --test-cases tests.yaml \
+    --llm claude-sonnet-4 \
+    --judge gpt-4o
+```
+
+```python
+from prompt_optimizer import optimize_prompt, Prompt, TestCase
+
+results = optimize_prompt(
+    prompt=my_prompt,
+    test_cases=test_cases,
+    llm="claude-sonnet-4",
+    judge_llm="gpt-4o",  # AI-based evaluation
+)
+```
+
+The LLM judge evaluates responses on:
+- **accuracy** - How well the response matches expected output
+- **relevance** - How on-topic the response is
+- **coherence** - How well-structured and logical the response is
+- **completeness** - Whether all aspects of the prompt are addressed
+- **conciseness** - Whether the response is appropriately brief
 
 ## Configuration
 

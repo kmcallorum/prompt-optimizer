@@ -2,9 +2,10 @@
 
 from prompt_optimizer.core import evaluate_variant, generate_variants, optimize_prompt
 from prompt_optimizer.evaluator import EvaluationResult, OptimizationResults
+from prompt_optimizer.llm_judge import LLMJudge
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase, TestSuite
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Prompt",
@@ -16,4 +17,5 @@ __all__ = [
     "optimize_prompt",
     "generate_variants",
     "evaluate_variant",
+    "LLMJudge",
 ]

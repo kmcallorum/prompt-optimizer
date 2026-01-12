@@ -13,6 +13,7 @@ from prompt_optimizer.llm_clients.anthropic import AnthropicClient
 from prompt_optimizer.llm_clients.base import LLMClient
 from prompt_optimizer.llm_clients.ollama import OllamaClient
 from prompt_optimizer.llm_clients.openai import OpenAIClient
+from prompt_optimizer.llm_judge import LLMJudge
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase
 
 STRATEGY_TRANSFORMS: dict[str, dict[str, str]] = {
@@ -75,6 +76,7 @@ async def evaluate_variant(
     test_case: TestCase,
     llm_client: LLMClient,
     criteria: list[str] | None = None,
+    judge: LLMJudge | None = None,
 ) -> EvaluationResult:
     """Evaluate a variant against a test case.
 
@@ -83,6 +85,7 @@ async def evaluate_variant(
         test_case: Test case with input and expected output
         llm_client: LLM client to use for generation
         criteria: List of criteria to evaluate
+        judge: Optional LLM judge for AI-based evaluation
 
     Returns:
         Evaluation result with scores and metadata
@@ -96,7 +99,12 @@ async def evaluate_variant(
     )
     latency = time.time() - start
 
-    scores = evaluate_response(response, test_case, criteria)
+    # Use LLM judge if provided, otherwise use rule-based evaluation
+    if judge is not None:
+        scores = await judge.evaluate(response, test_case, rendered)
+    else:
+        scores = evaluate_response(response, test_case, criteria)
+
     input_tokens = llm_client.count_tokens(rendered)
     output_tokens = llm_client.count_tokens(response)
     cost = llm_client.calculate_cost(input_tokens, output_tokens)
@@ -118,6 +126,7 @@ async def evaluate_all_variants(
     llm_client: LLMClient,
     criteria: list[str] | None = None,
     concurrency: int = 5,
+    judge: LLMJudge | None = None,
 ) -> list[EvaluationResult]:
     """Evaluate all variants against all test cases.
 
@@ -127,6 +136,7 @@ async def evaluate_all_variants(
         llm_client: LLM client for generation
         criteria: Evaluation criteria
         concurrency: Maximum concurrent API calls
+        judge: Optional LLM judge for AI-based evaluation
 
     Returns:
         List of all evaluation results
@@ -138,7 +148,9 @@ async def evaluate_all_variants(
         test_case: TestCase,
     ) -> EvaluationResult:
         async with semaphore:
-            return await evaluate_variant(variant, test_case, llm_client, criteria)
+            return await evaluate_variant(
+                variant, test_case, llm_client, criteria, judge
+            )
 
     tasks = [
         rate_limited_eval(variant, test_case)
@@ -187,6 +199,8 @@ async def optimize_prompt_async(
     api_key: str | None = None,
     weights: dict[str, float] | None = None,
     criteria: list[str] | None = None,
+    judge_llm: str | None = None,
+    judge_api_key: str | None = None,
 ) -> OptimizationResults:
     """Optimize a prompt by testing multiple variants.
 
@@ -194,10 +208,12 @@ async def optimize_prompt_async(
         prompt: Base prompt to optimize
         test_cases: Test cases to evaluate against
         strategies: Variant strategies to test
-        llm: LLM to use for evaluation
-        api_key: Optional API key
+        llm: LLM to use for generation
+        api_key: Optional API key for generation LLM
         weights: Scoring weights
         criteria: Evaluation criteria
+        judge_llm: Optional LLM to use as judge for AI-based evaluation
+        judge_api_key: Optional API key for judge LLM
 
     Returns:
         Optimization results with best variant
@@ -207,8 +223,17 @@ async def optimize_prompt_async(
 
     start_time = time.time()
     llm_client = get_llm_client(llm, api_key)
+
+    # Create judge if specified
+    judge: LLMJudge | None = None
+    if judge_llm:
+        judge_client = get_llm_client(judge_llm, judge_api_key)
+        judge = LLMJudge(judge_client, criteria)
+
     variants = generate_variants(prompt, strategies)
-    results = await evaluate_all_variants(variants, test_cases, llm_client, criteria)
+    results = await evaluate_all_variants(
+        variants, test_cases, llm_client, criteria, judge=judge
+    )
     best_variant, best_score = select_best_variant(results, weights)
     total_time = time.time() - start_time
     total_cost = sum(r.cost_usd for r in results)
@@ -233,8 +258,25 @@ def optimize_prompt(
     api_key: str | None = None,
     weights: dict[str, float] | None = None,
     criteria: list[str] | None = None,
+    judge_llm: str | None = None,
+    judge_api_key: str | None = None,
 ) -> OptimizationResults:
-    """Synchronous wrapper for optimize_prompt_async."""
+    """Synchronous wrapper for optimize_prompt_async.
+
+    Args:
+        prompt: Base prompt to optimize
+        test_cases: Test cases to evaluate against
+        strategies: Variant strategies to test
+        llm: LLM to use for generation
+        api_key: Optional API key for generation LLM
+        weights: Scoring weights
+        criteria: Evaluation criteria
+        judge_llm: Optional LLM to use as judge for AI-based evaluation
+        judge_api_key: Optional API key for judge LLM
+
+    Returns:
+        Optimization results with best variant
+    """
     return asyncio.run(
         optimize_prompt_async(
             prompt=prompt,
@@ -244,5 +286,7 @@ def optimize_prompt(
             api_key=api_key,
             weights=weights,
             criteria=criteria,
+            judge_llm=judge_llm,
+            judge_api_key=judge_api_key,
         )
     )

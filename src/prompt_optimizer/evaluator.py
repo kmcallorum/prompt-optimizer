@@ -93,6 +93,15 @@ EVALUATORS: dict[str, Callable[[str, TestCase], float]] = {
     "includes": includes_scorer,
 }
 
+# LLM judge criteria (evaluated by AI, not rule-based)
+LLM_JUDGE_CRITERIA = [
+    "accuracy",
+    "relevance",
+    "coherence",
+    "completeness",
+    "conciseness",
+]
+
 
 def evaluate_response(
     response: str,
