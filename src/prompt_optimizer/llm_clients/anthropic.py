@@ -1,12 +1,20 @@
 """Anthropic Claude API client."""
 
-import os
+from __future__ import annotations
 
-from anthropic import AsyncAnthropic
+import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from anthropic import AsyncAnthropic as AsyncAnthropicType
 
 
 class AnthropicClient:
-    """Claude API client."""
+    """Claude API client.
+
+    Supports dependency injection of the underlying AsyncAnthropic client
+    for testing purposes.
+    """
 
     PRICING = {
         "claude-sonnet-4-20250514": {"input": 3.0, "output": 15.0},
@@ -19,9 +27,22 @@ class AnthropicClient:
         self,
         api_key: str | None = None,
         model: str = "claude-sonnet-4-20250514",
+        client: AsyncAnthropicType | None = None,
     ) -> None:
+        """Initialize the Anthropic client.
+
+        Args:
+            api_key: API key for Anthropic. Falls back to ANTHROPIC_API_KEY env var.
+            model: Model name to use.
+            client: Optional pre-configured AsyncAnthropic client for DI/testing.
+        """
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
-        self.client = AsyncAnthropic(api_key=self.api_key)
+        if client is not None:
+            self.client = client
+        else:
+            from anthropic import AsyncAnthropic
+
+            self.client = AsyncAnthropic(api_key=self.api_key)
         self.model = model
 
     async def generate(

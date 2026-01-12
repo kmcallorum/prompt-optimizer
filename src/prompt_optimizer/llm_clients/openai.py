@@ -1,12 +1,20 @@
 """OpenAI API client."""
 
-import os
+from __future__ import annotations
 
-from openai import AsyncOpenAI
+import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openai import AsyncOpenAI as AsyncOpenAIType
 
 
 class OpenAIClient:
-    """OpenAI API client."""
+    """OpenAI API client.
+
+    Supports dependency injection of the underlying AsyncOpenAI client
+    for testing purposes.
+    """
 
     PRICING = {
         "gpt-4": {"input": 30.0, "output": 60.0},
@@ -20,9 +28,22 @@ class OpenAIClient:
         self,
         api_key: str | None = None,
         model: str = "gpt-4o",
+        client: AsyncOpenAIType | None = None,
     ) -> None:
+        """Initialize the OpenAI client.
+
+        Args:
+            api_key: API key for OpenAI. Falls back to OPENAI_API_KEY env var.
+            model: Model name to use.
+            client: Optional pre-configured AsyncOpenAI client for DI/testing.
+        """
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
-        self.client = AsyncOpenAI(api_key=self.api_key)
+        if client is not None:
+            self.client = client
+        else:
+            from openai import AsyncOpenAI
+
+            self.client = AsyncOpenAI(api_key=self.api_key)
         self.model = model
 
     async def generate(

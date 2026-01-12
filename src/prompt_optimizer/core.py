@@ -1,7 +1,10 @@
-"""Core optimization logic."""
+"""Core optimization logic with dependency injection support."""
+
+from __future__ import annotations
 
 import asyncio
 import time
+from typing import TYPE_CHECKING
 
 from prompt_optimizer.evaluator import (
     EvaluationResult,
@@ -9,20 +12,13 @@ from prompt_optimizer.evaluator import (
     evaluate_response,
     select_best_variant,
 )
-from prompt_optimizer.llm_clients.anthropic import AnthropicClient
 from prompt_optimizer.llm_clients.base import LLMClient
-from prompt_optimizer.llm_clients.ollama import OllamaClient
-from prompt_optimizer.llm_clients.openai import OpenAIClient
-from prompt_optimizer.llm_judge import LLMJudge
-from prompt_optimizer.metrics import (
-    record_best_variant,
-    record_llm_request,
-    record_optimization_complete,
-    record_optimization_start,
-    record_test_case_result,
-    record_variant_evaluation,
-)
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase
+
+if TYPE_CHECKING:
+    from prompt_optimizer.factory import ClientFactory
+    from prompt_optimizer.llm_judge import LLMJudge
+    from prompt_optimizer.metrics import MetricsRecorder
 
 STRATEGY_TRANSFORMS: dict[str, dict[str, str]] = {
     "concise": {
@@ -85,6 +81,7 @@ async def evaluate_variant(
     llm_client: LLMClient,
     criteria: list[str] | None = None,
     judge: LLMJudge | None = None,
+    metrics: MetricsRecorder | None = None,
 ) -> EvaluationResult:
     """Evaluate a variant against a test case.
 
@@ -94,6 +91,7 @@ async def evaluate_variant(
         llm_client: LLM client to use for generation
         criteria: List of criteria to evaluate
         judge: Optional LLM judge for AI-based evaluation
+        metrics: Optional metrics recorder for observability
 
     Returns:
         Evaluation result with scores and metadata
@@ -117,21 +115,22 @@ async def evaluate_variant(
     output_tokens = llm_client.count_tokens(response)
     cost = llm_client.calculate_cost(input_tokens, output_tokens)
 
-    # Record metrics
-    prompt_name = variant.base_prompt.name
-    record_llm_request(
-        llm=llm_client.model_name,
-        operation="generate",
-        duration_seconds=latency,
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        cost_usd=cost,
-    )
-    record_variant_evaluation(prompt_name, variant.strategy, scores)
+    # Record metrics if recorder provided
+    if metrics is not None:
+        prompt_name = variant.base_prompt.name
+        metrics.record_llm_request(
+            llm=llm_client.model_name,
+            operation="generate",
+            duration_seconds=latency,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cost_usd=cost,
+        )
+        metrics.record_variant_evaluation(prompt_name, variant.strategy, scores)
 
-    # Record test case result (pass if accuracy > 0.7)
-    accuracy = scores.get("accuracy", 0.0)
-    record_test_case_result(prompt_name, passed=accuracy > 0.7)
+        # Record test case result (pass if accuracy > 0.7)
+        accuracy = scores.get("accuracy", 0.0)
+        metrics.record_test_case_result(prompt_name, passed=accuracy > 0.7)
 
     return EvaluationResult(
         variant=variant,
@@ -151,6 +150,7 @@ async def evaluate_all_variants(
     criteria: list[str] | None = None,
     concurrency: int = 5,
     judge: LLMJudge | None = None,
+    metrics: MetricsRecorder | None = None,
 ) -> list[EvaluationResult]:
     """Evaluate all variants against all test cases.
 
@@ -161,6 +161,7 @@ async def evaluate_all_variants(
         criteria: Evaluation criteria
         concurrency: Maximum concurrent API calls
         judge: Optional LLM judge for AI-based evaluation
+        metrics: Optional metrics recorder for observability
 
     Returns:
         List of all evaluation results
@@ -173,7 +174,7 @@ async def evaluate_all_variants(
     ) -> EvaluationResult:
         async with semaphore:
             return await evaluate_variant(
-                variant, test_case, llm_client, criteria, judge
+                variant, test_case, llm_client, criteria, judge, metrics
             )
 
     tasks = [
@@ -188,31 +189,25 @@ async def evaluate_all_variants(
 def get_llm_client(
     llm: str,
     api_key: str | None = None,
-) -> AnthropicClient | OpenAIClient | OllamaClient:
+    factory: ClientFactory | None = None,
+) -> LLMClient:
     """Get LLM client by name.
 
     Args:
         llm: LLM identifier (e.g., 'claude-sonnet-4', 'gpt-4o', 'ollama:llama3')
         api_key: Optional API key
+        factory: Optional client factory for dependency injection
 
     Returns:
         Configured LLM client
     """
-    if llm.startswith("claude") or llm.startswith("anthropic"):
-        model = llm.replace("anthropic:", "")
-        if model == "claude-sonnet-4":
-            model = "claude-sonnet-4-20250514"
-        elif model == "claude-opus-4":
-            model = "claude-opus-4-20250514"
-        return AnthropicClient(api_key=api_key, model=model)
-    elif llm.startswith("gpt") or llm.startswith("openai"):
-        model = llm.replace("openai:", "")
-        return OpenAIClient(api_key=api_key, model=model)
-    elif llm.startswith("ollama"):
-        model = llm.replace("ollama:", "")
-        return OllamaClient(model=model)
-    else:
-        return AnthropicClient(api_key=api_key, model=llm)
+    if factory is not None:
+        return factory.create(llm, api_key)
+
+    # Use default factory
+    from prompt_optimizer.factory import get_default_factory
+
+    return get_default_factory().create(llm, api_key)
 
 
 async def optimize_prompt_async(
@@ -225,6 +220,10 @@ async def optimize_prompt_async(
     criteria: list[str] | None = None,
     judge_llm: str | None = None,
     judge_api_key: str | None = None,
+    client_factory: ClientFactory | None = None,
+    metrics: MetricsRecorder | None = None,
+    llm_client: LLMClient | None = None,
+    judge: LLMJudge | None = None,
 ) -> OptimizationResults:
     """Optimize a prompt by testing multiple variants.
 
@@ -232,12 +231,16 @@ async def optimize_prompt_async(
         prompt: Base prompt to optimize
         test_cases: Test cases to evaluate against
         strategies: Variant strategies to test
-        llm: LLM to use for generation
+        llm: LLM to use for generation (ignored if llm_client provided)
         api_key: Optional API key for generation LLM
         weights: Scoring weights
         criteria: Evaluation criteria
         judge_llm: Optional LLM to use as judge for AI-based evaluation
         judge_api_key: Optional API key for judge LLM
+        client_factory: Optional factory for creating LLM clients
+        metrics: Optional metrics recorder for observability
+        llm_client: Optional pre-configured LLM client (for DI)
+        judge: Optional pre-configured LLM judge (for DI)
 
     Returns:
         Optimization results with best variant
@@ -245,30 +248,50 @@ async def optimize_prompt_async(
     if strategies is None:
         strategies = ["concise", "detailed"]
 
-    # Record optimization start
-    record_optimization_start(prompt.name)
+    # Use default metrics if none provided (for backward compatibility)
+    if metrics is None:
+        from prompt_optimizer.metrics import (
+            record_best_variant,
+            record_optimization_complete,
+            record_optimization_start,
+        )
+
+        # Use module-level functions for backward compatibility
+        record_optimization_start(prompt.name)
+        use_module_metrics = True
+    else:
+        metrics.record_optimization_start(prompt.name)
+        use_module_metrics = False
 
     start_time = time.time()
-    llm_client = get_llm_client(llm, api_key)
 
-    # Create judge if specified
-    judge: LLMJudge | None = None
-    if judge_llm:
-        judge_client = get_llm_client(judge_llm, judge_api_key)
+    # Create or use provided LLM client
+    if llm_client is None:
+        llm_client = get_llm_client(llm, api_key, client_factory)
+
+    # Create judge if specified and not provided
+    if judge is None and judge_llm:
+        from prompt_optimizer.llm_judge import LLMJudge
+
+        judge_client = get_llm_client(judge_llm, judge_api_key, client_factory)
         judge = LLMJudge(judge_client, criteria)
 
     try:
         variants = generate_variants(prompt, strategies)
         results = await evaluate_all_variants(
-            variants, test_cases, llm_client, criteria, judge=judge
+            variants, test_cases, llm_client, criteria, judge=judge, metrics=metrics
         )
         best_variant, best_score = select_best_variant(results, weights)
         total_time = time.time() - start_time
         total_cost = sum(r.cost_usd for r in results)
 
         # Record successful optimization
-        record_optimization_complete(prompt.name, total_time, success=True)
-        record_best_variant(prompt.name, best_variant.strategy, best_score)
+        if use_module_metrics:
+            record_optimization_complete(prompt.name, total_time, success=True)
+            record_best_variant(prompt.name, best_variant.strategy, best_score)
+        elif metrics is not None:
+            metrics.record_optimization_complete(prompt.name, total_time, success=True)
+            metrics.record_best_variant(prompt.name, best_variant.strategy, best_score)
 
         return OptimizationResults(
             base_prompt_name=prompt.name,
@@ -283,7 +306,12 @@ async def optimize_prompt_async(
     except Exception:
         # Record failed optimization
         total_time = time.time() - start_time
-        record_optimization_complete(prompt.name, total_time, success=False)
+        if use_module_metrics:
+            from prompt_optimizer.metrics import record_optimization_complete
+
+            record_optimization_complete(prompt.name, total_time, success=False)
+        elif metrics is not None:
+            metrics.record_optimization_complete(prompt.name, total_time, success=False)
         raise
 
 
@@ -297,6 +325,10 @@ def optimize_prompt(
     criteria: list[str] | None = None,
     judge_llm: str | None = None,
     judge_api_key: str | None = None,
+    client_factory: ClientFactory | None = None,
+    metrics: MetricsRecorder | None = None,
+    llm_client: LLMClient | None = None,
+    judge: LLMJudge | None = None,
 ) -> OptimizationResults:
     """Synchronous wrapper for optimize_prompt_async.
 
@@ -304,12 +336,16 @@ def optimize_prompt(
         prompt: Base prompt to optimize
         test_cases: Test cases to evaluate against
         strategies: Variant strategies to test
-        llm: LLM to use for generation
+        llm: LLM to use for generation (ignored if llm_client provided)
         api_key: Optional API key for generation LLM
         weights: Scoring weights
         criteria: Evaluation criteria
         judge_llm: Optional LLM to use as judge for AI-based evaluation
         judge_api_key: Optional API key for judge LLM
+        client_factory: Optional factory for creating LLM clients
+        metrics: Optional metrics recorder for observability
+        llm_client: Optional pre-configured LLM client (for DI)
+        judge: Optional pre-configured LLM judge (for DI)
 
     Returns:
         Optimization results with best variant
@@ -325,5 +361,9 @@ def optimize_prompt(
             criteria=criteria,
             judge_llm=judge_llm,
             judge_api_key=judge_api_key,
+            client_factory=client_factory,
+            metrics=metrics,
+            llm_client=llm_client,
+            judge=judge,
         )
     )

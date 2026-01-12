@@ -1,5 +1,7 @@
 """Click-based CLI for prompt-optimizer."""
 
+from __future__ import annotations
+
 import asyncio
 import json
 from pathlib import Path
@@ -28,6 +30,7 @@ from prompt_optimizer.reporters import (
     save_json_report,
 )
 from prompt_optimizer.storage import PromptStorage
+
 
 console = Console()
 
