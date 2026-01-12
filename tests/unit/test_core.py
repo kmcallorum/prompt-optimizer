@@ -1,11 +1,14 @@
 """Unit tests for core module."""
 
+import pytest
 
 from prompt_optimizer.core import generate_variants, get_llm_client
 from prompt_optimizer.llm_clients.anthropic import AnthropicClient
 from prompt_optimizer.llm_clients.ollama import OllamaClient
 from prompt_optimizer.llm_clients.openai import OpenAIClient
 from prompt_optimizer.prompt import Prompt
+
+pytestmark = pytest.mark.unit
 
 
 class TestGenerateVariants:

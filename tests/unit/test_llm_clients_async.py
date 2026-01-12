@@ -8,6 +8,8 @@ from prompt_optimizer.llm_clients.anthropic import AnthropicClient
 from prompt_optimizer.llm_clients.ollama import OllamaClient
 from prompt_optimizer.llm_clients.openai import OpenAIClient
 
+pytestmark = pytest.mark.unit
+
 
 class TestAnthropicClientAsync:
     """Async tests for AnthropicClient."""

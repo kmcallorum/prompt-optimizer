@@ -12,6 +12,8 @@ from prompt_optimizer.evaluator import (
 )
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase
 
+pytestmark = pytest.mark.unit
+
 
 class TestAccuracyScorer:
     """Tests for accuracy scoring."""

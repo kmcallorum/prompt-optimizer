@@ -39,6 +39,7 @@ dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.23.0",
+    "pytest-agents>=1.0.0",
     "ruff>=0.1.0",
     "mypy>=1.8.0",
     "types-PyYAML>=6.0.0",
@@ -85,6 +86,17 @@ strict = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "performance: Performance benchmark tests",
+    "slow: Slow running tests",
+    "requires_llm: Tests requiring LLM access",
+    "agent_pm: Tests requiring PM agent",
+    "agent_research: Tests requiring Research agent",
+    "agent_index: Tests requiring Index agent",
+    "asyncio: Async tests (pytest-asyncio)",
+]
 
 [tool.coverage.run]
 source = ["src/prompt_optimizer"]

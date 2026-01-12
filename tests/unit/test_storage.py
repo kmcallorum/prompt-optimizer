@@ -7,6 +7,8 @@ import pytest
 from prompt_optimizer.prompt import Prompt
 from prompt_optimizer.storage import PromptStorage, generate_version_id
 
+pytestmark = pytest.mark.unit
+
 
 class TestGenerateVersionId:
     """Tests for generate_version_id function."""

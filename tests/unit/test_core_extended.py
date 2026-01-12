@@ -11,6 +11,8 @@ from prompt_optimizer.core import (
 )
 from prompt_optimizer.prompt import Prompt, TestCase
 
+pytestmark = pytest.mark.unit
+
 
 class TestGetLLMClientExtended:
     """Extended tests for get_llm_client."""

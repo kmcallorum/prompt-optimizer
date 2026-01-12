@@ -1,5 +1,7 @@
 """Unit tests for metrics module."""
 
+import pytest
+
 from prompt_optimizer.metrics import (
     JUDGE_EVALUATIONS_TOTAL,
     LLM_REQUESTS_TOTAL,
@@ -17,6 +19,8 @@ from prompt_optimizer.metrics import (
     record_test_case_result,
     record_variant_evaluation,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestInitMetrics:

@@ -2,7 +2,11 @@
 
 from pathlib import Path
 
+import pytest
+
 from prompt_optimizer.storage import PromptStorage
+
+pytestmark = pytest.mark.unit
 
 
 class TestSaveResults:

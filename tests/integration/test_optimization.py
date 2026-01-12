@@ -13,6 +13,8 @@ from prompt_optimizer.prompt import Prompt, TestCase
 # Import MockLLMClient from conftest
 from tests.conftest import MockLLMClient
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_evaluate_single_variant() -> None:

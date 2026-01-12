@@ -7,6 +7,8 @@ from click.testing import CliRunner
 
 from prompt_optimizer.cli import cli, load_prompt_from_yaml, load_test_cases_from_yaml
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def runner() -> CliRunner:

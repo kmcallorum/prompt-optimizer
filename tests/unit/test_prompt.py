@@ -1,7 +1,10 @@
 """Unit tests for prompt module."""
 
+import pytest
 
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase, TestSuite
+
+pytestmark = pytest.mark.unit
 
 
 class TestPrompt:

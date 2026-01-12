@@ -6,6 +6,9 @@ import pytest
 
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase, TestSuite
 
+# pytest-agents fixtures are automatically available through its plugin entry point
+# No need to explicitly import - the plugin registers fixtures via pytest hooks
+
 
 class MockLLMClient:
     """Mock LLM client for testing.

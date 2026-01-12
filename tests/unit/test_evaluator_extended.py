@@ -1,5 +1,6 @@
 """Extended tests for evaluator module."""
 
+import pytest
 
 from prompt_optimizer.evaluator import (
     EvaluationResult,
@@ -7,6 +8,8 @@ from prompt_optimizer.evaluator import (
     select_best_variant,
 )
 from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase
+
+pytestmark = pytest.mark.unit
 
 
 class TestSelectBestVariantExtended:

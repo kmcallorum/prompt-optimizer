@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pytest
 from rich.console import Console
 
 from prompt_optimizer.evaluator import EvaluationResult, OptimizationResults
@@ -14,6 +15,8 @@ from prompt_optimizer.reporters import (
     save_html_report,
     save_json_report,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def create_sample_results() -> OptimizationResults:

@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import pytest
+
 from prompt_optimizer.factory import (
     ClientRegistry,
     DefaultClientFactory,
@@ -12,6 +14,8 @@ from prompt_optimizer.factory import (
 from prompt_optimizer.llm_clients.anthropic import AnthropicClient
 from prompt_optimizer.llm_clients.ollama import OllamaClient
 from prompt_optimizer.llm_clients.openai import OpenAIClient
+
+pytestmark = pytest.mark.unit
 
 
 class MockLLMClient:

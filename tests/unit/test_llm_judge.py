@@ -7,6 +7,8 @@ import pytest
 from prompt_optimizer.llm_judge import LLMJudge, llm_evaluate_response
 from prompt_optimizer.prompt import TestCase
 
+pytestmark = pytest.mark.unit
+
 
 class TestLLMJudge:
     """Tests for LLMJudge class."""
