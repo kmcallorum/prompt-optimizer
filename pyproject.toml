@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "prompt-optimizer-cli"
-version = "0.3.2"
+version = "0.3.4"
 description = "A CLI tool and Python library for optimizing LLM prompts through systematic testing and evaluation"
 readme = "README.md"
 license = "MIT"
