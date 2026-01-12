@@ -155,9 +155,10 @@ def main() -> None:
     print("=" * 60)
 
     # Start Prometheus metrics server
-    print("\n[1/5] Starting Prometheus metrics server on port 8000...")
-    start_http_server(8000)
-    print("      Metrics available at: http://localhost:8000/metrics")
+    metrics_port = 9090
+    print(f"\n[1/5] Starting Prometheus metrics server on port {metrics_port}...")
+    start_http_server(metrics_port)
+    print(f"      Metrics available at: http://localhost:{metrics_port}/metrics")
 
     # Initialize metrics
     print("\n[2/5] Initializing metrics...")
@@ -239,7 +240,7 @@ def main() -> None:
     print("\n" + "=" * 60)
     print("PROMETHEUS METRICS")
     print("=" * 60)
-    print("Metrics are being exposed at http://localhost:8000/metrics")
+    print(f"Metrics are being exposed at http://localhost:{metrics_port}/metrics")
     print("\nKey metrics to look for:")
     print("  - prompt_optimizer_optimizations_total")
     print("  - prompt_optimizer_variants_evaluated_total")
