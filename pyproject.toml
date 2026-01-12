@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "prompt-optimizer"
+name = "prompt-optimizer-cli"
 version = "0.3.0"
 description = "A CLI tool and Python library for optimizing LLM prompts through systematic testing and evaluation"
 readme = "README.md"

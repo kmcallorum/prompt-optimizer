@@ -1,5 +1,6 @@
-# prompt-optimizer
+# prompt-optimizer-cli
 
+[![PyPI](https://img.shields.io/pypi/v/prompt-optimizer-cli.svg)](https://pypi.org/project/prompt-optimizer-cli/)
 [![CI](https://github.com/kmcallorum/prompt-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/kmcallorum/prompt-optimizer/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/kmcallorum/prompt-optimizer/graph/badge.svg)](https://codecov.io/gh/kmcallorum/prompt-optimizer)
 [![Snyk Security](https://snyk.io/test/github/kmcallorum/prompt-optimizer/badge.svg)](https://snyk.io/test/github/kmcallorum/prompt-optimizer)
@@ -24,8 +25,8 @@ A CLI tool and Python library for optimizing LLM prompts through systematic test
 ## Quick Start
 
 ```bash
-# Install
-pip install -e .
+# Install from PyPI
+pip install prompt-optimizer-cli
 
 # Initialize a project
 prompt-optimizer init
@@ -40,10 +41,16 @@ prompt-optimizer optimize prompts/example.yaml \
 
 ## Installation
 
+### From PyPI
+
+```bash
+pip install prompt-optimizer-cli
+```
+
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/prompt-optimizer.git
+git clone https://github.com/kmcallorum/prompt-optimizer.git
 cd prompt-optimizer
 pip install -e .
 ```
