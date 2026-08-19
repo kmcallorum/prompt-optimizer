@@ -13,6 +13,8 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
       - uses: actions/checkout@v7
@@ -36,10 +38,15 @@ jobs:
       - name: Test with pytest
         run: pytest tests --cov=src/prompt_optimizer --cov-report=xml --cov-report=term-missing
 
+      # Same story as the Snyk step below: CODECOV_TOKEN is an Actions
+      # secret, which GitHub withholds from Dependabot-triggered runs. Skip
+      # cleanly there instead of failing every dependency-bump PR on an
+      # upload step that has nothing to do with the change being tested.
       - name: Upload coverage to Codecov
+        if: ${{ env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v7
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ env.CODECOV_TOKEN }}
           files: ./coverage.xml
           fail_ci_if_error: true
 
