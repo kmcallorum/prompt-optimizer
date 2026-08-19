@@ -1,5 +1,6 @@
 """Pytest fixtures for prompt-optimizer tests."""
 
+import os
 from typing import Any
 
 import pytest
@@ -8,6 +9,27 @@ from prompt_optimizer.prompt import Prompt, PromptVariant, TestCase, TestSuite
 
 # pytest-agents fixtures are automatically available through its plugin entry point
 # No need to explicitly import - the plugin registers fixtures via pytest hooks
+
+
+@pytest.fixture(autouse=True)
+def _dummy_provider_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Guarantee provider API keys are present for the duration of each test.
+
+    Tests that build a real OpenAIClient/AnthropicClient without injecting a
+    mock `client` (e.g. checking that the factory returns the right type) end
+    up constructing the real SDK client, which validates that *some*
+    credential is present. Without this, those tests are non-deterministic:
+    they pass or fail depending on whether OPENAI_API_KEY/ANTHROPIC_API_KEY
+    happens to be set in the ambient environment (it usually isn't in CI).
+
+    Falls back to a harmless placeholder only when a real value isn't
+    already set, so this never overrides an intentionally-configured key and
+    never makes a real network call on its own.
+    """
+    openai_key = os.environ.get("OPENAI_API_KEY", "test-openai-key")
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "test-anthropic-key")
+    monkeypatch.setenv("OPENAI_API_KEY", openai_key)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", anthropic_key)
 
 
 class MockLLMClient:

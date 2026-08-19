@@ -45,6 +45,8 @@ jobs:
 
   security:
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v7
 
@@ -58,9 +60,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      # SNYK_TOKEN is an Actions secret, but GitHub withholds Actions secrets
+      # from workflow runs triggered by Dependabot (a separate "Dependabot
+      # secrets" store is used for those). Skip cleanly instead of failing
+      # red on every dependency-bump PR. To get real scanning on those PRs
+      # too, add the same token under Settings > Secrets and variables >
+      # Dependabot.
+      #
+      # Note: the `secrets` context isn't allowed inside `if:` expressions,
+      # only in `env`/`with`, so the check goes through the job-level env
+      # var above instead of `secrets.SNYK_TOKEN` directly.
       - name: Run Snyk to check for vulnerabilities
+        if: ${{ env.SNYK_TOKEN != '' }}
         uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
