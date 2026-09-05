@@ -1,14 +1,13 @@
 # prompt-optimizer-cli
 
 [![PyPI](https://img.shields.io/pypi/v/prompt-optimizer-cli.svg)](https://pypi.org/project/prompt-optimizer-cli/)
-[![CI](https://github.com/kmcallorum/prompt-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/kmcallorum/prompt-optimizer/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/kmcallorum/prompt-optimizer/graph/badge.svg)](https://codecov.io/gh/kmcallorum/prompt-optimizer)
-[![Snyk Security](https://snyk.io/test/github/kmcallorum/prompt-optimizer/badge.svg)](https://snyk.io/test/github/kmcallorum/prompt-optimizer)
+[![CI](https://github.com/Lanier-Developments/prompt-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Lanier-Developments/prompt-optimizer/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Lanier-Developments/prompt-optimizer/graph/badge.svg)](https://codecov.io/gh/Lanier-Developments/prompt-optimizer)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Type Checked](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy-lang.org/)
-[![pytest-agents](https://img.shields.io/badge/pytest--agents-enabled-brightgreen.svg)](https://github.com/kmcallorum/prompt-optimizer)
+[![pytest-agents](https://img.shields.io/badge/pytest--agents-enabled-brightgreen.svg)](https://github.com/Lanier-Developments/prompt-optimizer)
 
 A CLI tool and Python library for optimizing LLM prompts through systematic testing, version control, and performance metrics. Think "pytest for prompts" - test multiple prompt variations, measure quality, and automatically select the best performer.
 
@@ -51,7 +50,7 @@ pip install prompt-optimizer-cli
 ### From Source
 
 ```bash
-git clone https://github.com/kmcallorum/prompt-optimizer.git
+git clone https://github.com/Lanier-Developments/prompt-optimizer.git
 cd prompt-optimizer
 pip install -e .
 ```
