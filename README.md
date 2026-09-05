@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Type Checked](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy-lang.org/)
-[![pytest-agents](https://img.shields.io/badge/pytest--agents-enabled-brightgreen.svg)](https://github.com/Lanier-Developments/prompt-optimizer)
+[![pytest-agents](https://img.shields.io/badge/pytest--agents-enabled-brightgreen.svg)](https://github.com/Lanier-Developments/pytest-agents)
 
 A CLI tool and Python library for optimizing LLM prompts through systematic testing, version control, and performance metrics. Think "pytest for prompts" - test multiple prompt variations, measure quality, and automatically select the best performer.
 
